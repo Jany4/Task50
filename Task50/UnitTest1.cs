@@ -50,7 +50,7 @@ namespace Task50
         void MakeScreenShot(IWebDriver driver, string path)
         {
             Screenshot img = ((ITakesScreenshot)driver).GetScreenshot();
-            img.SaveAsFile(path, ScreenshotImageFormat.Jpeg);
+            img.SaveAsFile(path, ScreenshotImageFormat.Png);
         }
 
         [SetUp]
@@ -72,6 +72,9 @@ namespace Task50
         public void LoginTest(string loginstr, string passwordstr)
         {
             _driver.Navigate().GoToUrl("https://mail.tut.by");
+
+            MakeScreenShot(_driver, "/Users/macbookpro/Desktop/TestScreenshot.png"); //making screenshot, saving it to the Desktop
+
             IWebElement loginField = _driver.FindElement(By.Id("Username"));
             IWebElement passwrdField = _driver.FindElement(By.Id("Password"));
             IWebElement loginButton = _driver.FindElement(By.XPath("//input[contains(@class, \"loginButton\")]"));
