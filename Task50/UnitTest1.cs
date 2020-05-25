@@ -10,13 +10,59 @@ namespace Task50
 {
     public class Tests
     {
-
         IWebDriver _driver;
+
+        //explicit waiter for the webelement
+        bool wait(IWebDriver driver, By locator)
+        {
+            WebDriverWait waiter = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            waiter.PollingInterval = TimeSpan.FromMilliseconds(100); //changing polling frequency
+
+            try
+            {
+                var element = waiter.Until(condition =>
+                {
+                    try
+                    {
+                        var elementToBeDisplayed = _driver.FindElement(locator);
+                        return elementToBeDisplayed.Displayed;
+                    }
+                    catch (NoSuchElementException)
+                    {
+                        return false;
+                    }
+                    catch (StaleElementReferenceException)
+                    {
+                        return false;
+                    }
+
+                });
+
+                return true;
+            }
+            catch (WebDriverTimeoutException)
+            {
+                return false;
+            }
+        }
+
+        // making screenshot, saving to the file in jpeg format
+        void MakeScreenShot(IWebDriver driver, string path)
+        {
+            Screenshot img = ((ITakesScreenshot)driver).GetScreenshot();
+            img.SaveAsFile(path, ScreenshotImageFormat.Jpeg);
+        }
 
         [SetUp]
         public void Setup()
         {
             _driver = new ChromeDriver();
+        }
+
+        [TearDown]
+        public void CleanUp()
+        {
+            _driver.Close();
         }
 
         [TestCase("seleniumtests@tut.by", "123456789zxcvbn")]
@@ -36,31 +82,11 @@ namespace Task50
 
          //   Thread.Sleep(10000); //neither explicit, nor implicit waiter. Implicit waiters work for all the elements. And the explicit waiters works for a particular element with the particular condition. Thread.Sleep() just stop the thread with executing code for a particular time.
 
-            WebDriverWait loginWait = new WebDriverWait(_driver, TimeSpan.FromSeconds(15)); //creating explicit waiter
-            loginWait.PollingInterval = TimeSpan.FromMilliseconds(100); //changing polling frequency
+           
 
-            try
-            {
-                var loginText = loginWait.Until(_driver => _driver.FindElement(By.XPath("//div[@class=\"mail-User-Name\"]")));
-                Assert.IsTrue((loginText.Displayed) && (loginText.Text == loginstr), $"User name is not displayed or user name is not equal to {loginstr}");
-            }
-            catch (NoSuchElementException)
-            {
-                Assert.Fail("Login failed");
-            }
-            catch (StaleElementReferenceException)
-            {
-                Assert.Fail("User name element is stale");
-            }
-            catch (WebDriverTimeoutException)
-            {
-                Assert.Fail("Login failed");
-            }
-            finally
-            {
-                _driver.Quit();
-            }
-            
+
+            Assert.IsTrue(wait(_driver, By.XPath("//div[@class=\"mail-User-Name\"]")));
+           
         }
 
         [Test]
@@ -84,8 +110,6 @@ namespace Task50
             }
 
             Assert.IsTrue(result);
-
-            _driver.Close();
         }
 
         [Test]
@@ -175,38 +199,8 @@ namespace Task50
             _driver.Navigate().GoToUrl("https://www.seleniumeasy.com/test/dynamic-data-loading-demo.html");
             _driver.FindElement(By.Id("save")).Click();
 
-            WebDriverWait userWaiter = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            try
-            {
-                var userPicDispl = userWaiter.Until(condition =>
-                {
-                    try
-                    {
-                        var userPic = _driver.FindElement(By.XPath("//div[@id=\"loading\"]/img[contains(@src, \"https://randomuser.me\")]"));
-                        return userPic.Enabled;
-                    }
-                    catch (NoSuchElementException)
-                    {
-                        return false;
-                    }
-                    catch (StaleElementReferenceException)
-                    {
-                        return false;
-                    }
 
-                });
-
-                Assert.IsTrue(userPicDispl);
-            }
-            catch(WebDriverTimeoutException)
-            {
-                Assert.Fail("User is not displayed");
-            }
-            finally
-            {
-                _driver.Close();
-            }
-
+            Assert.IsTrue(wait(_driver, By.XPath("//div[@id=\"loading\"]/img[contains(@src, \"https://randomuser.me\")]")));
         }
     }
 }
